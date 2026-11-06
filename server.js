@@ -1,6 +1,6 @@
 const express = require("express");
 const { spawn } = require("child_process");
-
+const { Readable } = require("stream");
 const app = express();
 const PORT = process.env.PORT || 3000;
 const IA = "https://archive.org";
@@ -103,4 +103,24 @@ if (good.length) flacs = good;flacs.sort((a, b) => kbps(b) - kbps(a));
   }
 });
 
+app.get("/debug/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const meta = await (await fetch(`${IA}/metadata/${id}`)).json();
+    const files = (meta.files || [])
+      .filter((f) => f.name.toLowerCase().endsWith(".flac"))
+      .map((f) => ({ name: f.name, size: f.size, length: f.length }));
+    let head = null;
+    if (files[0]) {
+      const r = await fetch(
+        `${IA}/download/${id}/${encodeURIComponent(files[0].name)}`,
+        { method: "HEAD" }
+      );
+      head = r.status + " " + r.headers.get("content-type");
+    }
+    res.json({ flacCount: files.length, first: files.slice(0, 3), head });
+  } catch (e) {
+    res.status(500).json({ error: String(e) });
+  }
+});
 app.listen(PORT, () => console.log("Addon running on port " + PORT));
