@@ -64,9 +64,13 @@ app.get("/stream/:id", async (req, res) => {
     if (!/^[\w.\-]+$/.test(id)) return res.sendStatus(400);
 
     const meta = await (await fetch(`${IA}/metadata/${id}`)).json();
-    const flacs = (meta.files || []).filter((f) =>
-      f.name.toLowerCase().endsWith(".flac")
-    );
+    const kbps = (f) =>
+  f.size && f.length ? (f.size * 8) / Number(f.length) / 1000 : 0;
+let flacs = (meta.files || []).filter((f) =>
+  f.name.toLowerCase().endsWith(".flac")
+);
+const good = flacs.filter((f) => kbps(f) >= 700);
+if (good.length) flacs = good;flacs.sort((a, b) => kbps(b) - kbps(a));
     const track = flacs[parseInt(req.query.track || "0", 10)];
     if (!track) return res.sendStatus(404);
 
