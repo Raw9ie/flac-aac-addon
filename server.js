@@ -77,7 +77,14 @@ if (good.length) flacs = good;flacs.sort((a, b) => kbps(b) - kbps(a));
     const src = `${IA}/download/${id}/${encodeURIComponent(track.name)}`;
     const quality = req.query.quality || "lossless";
 
-    if (quality === "lossless") return res.redirect(src);
+    if (quality === "lossless") {
+  const r = await fetch(src);
+  if (!r.ok) return res.sendStatus(502);
+  res.type("audio/flac");
+  const len = r.headers.get("content-length");
+  if (len) res.set("Content-Length", len);
+  return Readable.fromWeb(r.body).pipe(res);
+}
 
     const args = ["-i", src, "-vn"];
     if (quality === "high") {
