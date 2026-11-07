@@ -8,24 +8,23 @@ const IA = "https://archive.org";
 const manifest = {
   id: "dev.yourname.flac-aac-free",
   name: "Free FLAC + AAC (Internet Archive)",
-  version: "1.1.0",
+  version: "1.3.0",
   resources: ["search", "stream"],
   checkValidLossless: 0,
   allowDownloads: 1,
   settings: [
-    {
-      key: "quality",
-      type: "select",
-      default: "lossless",
-      options: [
-        { label: "Lossless (FLAC)", value: "lossless" },
-        { label: "High (FLAC, up to 24/96)", value: "high" },
-        { label: "AAC 256 kbps", value: "aac256" },
-        { label: "AAC 128 kbps (data saver)", value: "aac128" },
-      ],
-    },
-  ],
-};
+  {
+    key: "quality",
+    type: "select",
+    default: "LOSSLESS",
+    options: [
+      { label: "Lossless (FLAC)", value: "LOSSLESS" },
+      { label: "Hi-Res (FLAC up to 24/96)", value: "HI_RES" },
+      { label: "High (AAC 256)", value: "HIGH" },
+      { label: "Low (AAC 128)", value: "LOW" },
+    ],
+  },
+],
 
 app.use((req, res, next) => {
   res.set("Access-Control-Allow-Origin", "*");
@@ -75,8 +74,9 @@ if (good.length) flacs = good;flacs.sort((a, b) => kbps(b) - kbps(a));
     if (!track) return res.sendStatus(404);
 
     const src = `${IA}/download/${id}/${encodeURIComponent(track.name)}`;
-    const quality = req.query.quality || "lossless";
-
+    const map = { LOSSLESS: "lossless", HI_RES: "high", HIGH: "aac256", LOW: "aac128" };
+const q0 = String(req.query.quality || req.query.tier || "LOSSLESS");
+const quality = map[q0.toUpperCase()] || q0;
     if (quality === "lossless") {
   const r = await fetch(src);
   if (!r.ok) return res.sendStatus(502);
