@@ -9,6 +9,7 @@ const manifest = {
   id: "dev.yourname.flac-aac-free3",
   name: "Free FLAC + AAC (Internet Archive)",
   version: "1.3.0",
+  minAppVersion: 39,
   resources: ["search", "stream"],
   checkValidLossless: 0,
   allowDownloads: 1,
